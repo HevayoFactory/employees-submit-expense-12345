@@ -171,29 +171,97 @@ service http:InterceptableService / on ep0 {
 
     // ---- approvals (issue #8) ----
 
-    resource function get me/team/claims(ClaimStatus? status, int 'limit = 20, int offset = 0)
-            returns ClaimSummaryPage|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function get me/team/claims(http:RequestContext ctx, ClaimStatus? status, int 'limit = 20, int offset = 0)
+            returns ClaimSummaryPage|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        PageParams|ErrorBadRequest page = pageParams('limit, offset);
+        if page is ErrorBadRequest {
+            return page;
+        }
+        ClaimSummaryPage|error result = listTeamClaims(caller.userId, status, page, "/me/team/claims");
+        if result is error {
+            log:printError("listing team claims failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function get me/team/claims/[string claimId]()
-            returns Claim|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function get me/team/claims/[string claimId](http:RequestContext ctx)
+            returns Claim|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = readTeamClaim(caller, claimId);
+        if result is ClaimFailure {
+            return notFoundError();
+        }
+        if result is error {
+            log:printError("reading a team claim failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function post me/team/claims/[string claimId]/approve()
-            returns ClaimOk|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function post me/team/claims/[string claimId]/approve(http:RequestContext ctx)
+            returns Claim|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = approveTeamClaimFor(caller, claimId);
+        if result is ClaimFailure {
+            ErrorBadRequest|ErrorNotFound|ErrorConflict refusal = failureResponse(result);
+            if refusal is ErrorNotFound {
+                return refusal;
+            }
+            if refusal is ErrorConflict {
+                return refusal;
+            }
+            return internalError();
+        }
+        if result is error {
+            log:printError("approving a claim failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function post me/team/claims/[string claimId]/reject(@http:Payload Rejection payload)
-            returns ClaimOk|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function post me/team/claims/[string claimId]/reject(http:RequestContext ctx, @http:Payload Rejection payload)
+            returns Claim|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = rejectTeamClaimFor(caller, claimId, payload);
+        if result is ClaimFailure {
+            return failureResponse(result);
+        }
+        if result is error {
+            log:printError("rejecting a claim failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function get me/team/claims/[string claimId]/expense\-lines/[string lineId]/receipt()
-            returns Receipt|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function get me/team/claims/[string claimId]/expense\-lines/[string lineId]/receipt(http:RequestContext ctx)
+            returns Receipt|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Receipt|ClaimFailure|error result = getTeamReceiptFor(caller, claimId, lineId);
+        if result is ClaimFailure {
+            return notFoundError();
+        }
+        if result is error {
+            log:printError("reading a team receipt failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
     // ---- people and exports (issue #10) ----
