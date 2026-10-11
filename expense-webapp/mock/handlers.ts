@@ -96,12 +96,14 @@ function page<T>(items: T[], url: URL) {
   };
 }
 
-function buildLines(inputs: LineInput[], old: Claim["lines"] = []): Claim["lines"] {
-  return inputs.map((l, i) => ({
-    id: old[i]?.id ?? `l${nextLine++}`,
+// A replace carries no line ids (ExpenseLineInput), so every line is new and no
+// receipt survives it: the client re-attaches the ones it keeps.
+function buildLines(inputs: LineInput[]): Claim["lines"] {
+  return inputs.map((l) => ({
+    id: `l${nextLine++}`,
     date: l.date, amountCents: l.amountCents, categoryId: l.categoryId, note: l.note ?? "",
     categoryName: categoryName(l.categoryId),
-    receiptFileName: old[i]?.receiptFileName ?? null,
+    receiptFileName: null,
   }));
 }
 
@@ -123,12 +125,18 @@ const teamOf = (request: Request) => {
 };
 const teamClaim = (request: Request, id: string) => teamOf(request).find((c) => c.id === id);
 
+// Stored receipts by line id. Seeded receipts have no content of their own, so
+// they answer a tiny placeholder document.
+const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
+const stored = new Map<string, { fileName: string; contentType: string; contentBase64: string }>();
 const receipt = (c: Claim, lineId: string) => {
   const l = c.lines.find((x) => x.id === lineId);
-  return l?.receiptFileName
-    ? HttpResponse.json({ fileName: l.receiptFileName, contentType: "application/pdf", contentBase64: "JVBERi0xLjQK" })
-    : err(404, "Receipt not found");
+  if (!l?.receiptFileName) return err(404, "Receipt not found");
+  return HttpResponse.json(
+    stored.get(lineId) ?? { fileName: l.receiptFileName, contentType: "application/pdf", contentBase64: "JVBERi0xLjQK" },
+  );
 };
+const decodedBytes = (b64: string) => Math.floor((b64.length * 3) / 4) - (b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0);
 
 const byStatus = (items: Claim[], url: URL) => {
   const s = url.searchParams.get("status");
@@ -167,7 +175,7 @@ export const handlers = [
     if (c.status !== "draft" && c.status !== "rejected") return err(409, "Claim is not editable");
     const lines = validLines(await request.json().catch(() => null));
     if (!lines) return err(400, "Invalid claim", "A claim needs at least one valid expense line.");
-    const built = buildLines(lines, c.lines);
+    const built = buildLines(lines);
     const updated = { ...c, lines: built, totalCents: built.reduce((s, l) => s + l.amountCents, 0) };
     claims = claims.map((x) => (x.id === c.id ? updated : x));
     return HttpResponse.json(updated);
@@ -192,7 +200,10 @@ export const handlers = [
     if (c.status !== "draft" && c.status !== "rejected") return err(409, "Claim is not editable");
     const body = (await request.json().catch(() => null)) as { fileName?: string; contentType?: string; contentBase64?: string } | null;
     if (!body?.fileName || !body.contentType || !body.contentBase64) return err(400, "Invalid receipt");
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(body.contentBase64)) return err(400, "Invalid receipt", "The receipt content is not valid base64.");
+    if (decodedBytes(body.contentBase64) > MAX_RECEIPT_BYTES) return err(400, "Invalid receipt", "The receipt is larger than 5 MB.");
     if (!c.lines.some((l) => l.id === params.lineId)) return err(404, "Line not found");
+    stored.set(String(params.lineId), { fileName: body.fileName, contentType: body.contentType, contentBase64: body.contentBase64 });
     const updated = {
       ...c,
       lines: c.lines.map((l) => (l.id === params.lineId ? { ...l, receiptFileName: body.fileName! } : l)),
