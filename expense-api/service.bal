@@ -266,33 +266,125 @@ service http:InterceptableService / on ep0 {
 
     // ---- people and exports (issue #10) ----
 
-    resource function get employees(int 'limit = 20, int offset = 0)
-            returns EmployeePage|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function get employees(http:RequestContext ctx, int 'limit = 20, int offset = 0)
+            returns EmployeePage|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        PageParams|ErrorBadRequest page = pageParams('limit, offset);
+        if page is ErrorBadRequest {
+            return page;
+        }
+        EmployeePage|error result = listAllEmployees(page);
+        if result is error {
+            log:printError("listing employees failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function put employees/[string employeeId]/manager(@http:Payload ManagerAssignment payload)
-            returns Employee|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function put employees/[string employeeId]/manager(http:RequestContext ctx,
+            @http:Payload ManagerAssignment payload)
+            returns Employee|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Employee|ClaimFailure|error result = setEmployeeManagerFor(caller, employeeId, payload);
+        if result is ClaimFailure {
+            ErrorBadRequest|ErrorNotFound|ErrorConflict refusal = failureResponse(result);
+            if refusal is ErrorNotFound {
+                return refusal;
+            }
+            if refusal is ErrorBadRequest {
+                return refusal;
+            }
+            return internalError();
+        }
+        if result is error {
+            log:printError("setting a line manager failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function get export\-candidates(int 'limit = 20, int offset = 0)
-            returns PendingClaimPage|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function get export\-candidates(http:RequestContext ctx, int 'limit = 20, int offset = 0)
+            returns PendingClaimPage|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        PageParams|ErrorBadRequest page = pageParams('limit, offset);
+        if page is ErrorBadRequest {
+            return page;
+        }
+        PendingClaimPage|error result = listExportCandidates(page);
+        if result is error {
+            log:printError("listing export candidates failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function get exports(int 'limit = 20, int offset = 0)
-            returns ExportBatchPage|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function get exports(http:RequestContext ctx, int 'limit = 20, int offset = 0)
+            returns ExportBatchPage|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        PageParams|ErrorBadRequest page = pageParams('limit, offset);
+        if page is ErrorBadRequest {
+            return page;
+        }
+        ExportBatchPage|error result = listExportBatches(page);
+        if result is error {
+            log:printError("listing exports failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function post exports()
-            returns ExportBatch|ErrorUnauthorized|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function post exports(http:RequestContext ctx)
+            returns http:Created|ErrorUnauthorized|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        ExportBatch|ClaimFailure|error result = createExportFor(caller);
+        if result is ClaimFailure {
+            ErrorBadRequest|ErrorNotFound|ErrorConflict refusal = failureResponse(result);
+            if refusal is ErrorConflict {
+                return refusal;
+            }
+            return internalError();
+        }
+        if result is error {
+            log:printError("creating an export failed", 'error = result);
+            return internalError();
+        }
+        return <http:Created>{body: result};
     }
 
-    resource function get exports/[string exportId]/file()
-            returns string|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function get exports/[string exportId]/file(http:RequestContext ctx)
+            returns http:Ok|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        [string, string]|ClaimFailure|error result = readExportFile(exportId);
+        if result is ClaimFailure {
+            return notFoundError();
+        }
+        if result is error {
+            log:printError("reading an export file failed", 'error = result);
+            return internalError();
+        }
+        [string, string] [content, fileName] = result;
+        return <http:Ok>{
+            body: content,
+            mediaType: "text/csv",
+            headers: {"content-disposition": string `attachment; filename="${fileName}"`}
+        };
     }
 }
