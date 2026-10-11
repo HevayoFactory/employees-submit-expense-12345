@@ -1,0 +1,777 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T15:22:25.111Z",
+  "commit": "99011d8cd45edb6bd70b09603c5bc42b7aa7ff62",
+  "baseUrl": "http://http-employees-sub-development-default-f6f16893.openchoreoapis.localhost:19080/",
+  "isolation": "none achieved: no scenario could create its own container because the API is unreachable (all /api/* return 404); every assertion other than the role-gated navigation check is unmade",
+  "scenarios": [
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 6,
+      "rule": "A claim is made of expense lines and its total is their sum",
+      "scenario": "A claim with two lines",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha the employee starts a new claim",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she adds a \"Travel\" line of \"45.00\" dated \"2026-01-10\" with the note \"Train to client site\"",
+          "keyword": "When"
+        },
+        {
+          "text": "she adds a \"Meals\" line of \"20.50\" dated \"2026-01-10\" with the note \"Lunch with client\"",
+          "keyword": "And"
+        },
+        {
+          "text": "the claim shows two expense lines",
+          "keyword": "Then"
+        },
+        {
+          "text": "the claim total is \"$65.50\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 16,
+      "rule": "A receipt is an optional attachment on each expense line",
+      "scenario": "Attaching a receipt to a line",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has a draft claim with a \"Meals\" line of \"20.50\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she attaches the receipt \"lunch.pdf\" to that line",
+          "keyword": "When"
+        },
+        {
+          "text": "the line shows the receipt \"lunch.pdf\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 21,
+      "rule": "A receipt is an optional attachment on each expense line",
+      "scenario": "Submitting a line without a receipt",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has a draft claim with one \"Meals\" line of \"20.50\" and no receipt",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she submits the claim",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim status is \"Submitted\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 29,
+      "rule": "A draft can be edited until it is submitted",
+      "scenario": "Editing a draft",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has a draft claim with a \"Travel\" line of \"45.00\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she removes that line and adds a \"Travel\" line of \"52.00\"",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim total is \"$52.00\"",
+          "keyword": "Then"
+        },
+        {
+          "text": "the claim status is \"Draft\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 35,
+      "rule": "A draft can be edited until it is submitted",
+      "scenario": "Submitting a draft",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has a draft claim with a \"Travel\" line of \"45.00\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she submits the claim",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim status is \"Submitted\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 44,
+      "rule": "A submitted claim cannot be edited until it is rejected",
+      "scenario": "Editing a submitted claim",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Asha has submitted a claim with a \"Travel\" line of \"45.00\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "the claim offers no way to edit or remove its lines",
+          "keyword": "Then"
+        },
+        {
+          "text": "the claim total is still \"$45.00\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 52,
+      "rule": "An employee sees each of their claims with its status",
+      "scenario": "The claim list shows statuses",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has one draft claim, one submitted claim and one approved claim",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "she opens her claims",
+          "keyword": "When"
+        },
+        {
+          "text": "she sees three claims",
+          "keyword": "Then"
+        },
+        {
+          "text": "the statuses shown are \"Draft\", \"Submitted\" and \"Approved\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 62,
+      "rule": "An employee sees only their own claims",
+      "scenario": "Another employee's claims are not listed",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Asha has one claim and Maya has two claims",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Asha opens her claims",
+          "keyword": "When"
+        },
+        {
+          "text": "she sees exactly one claim",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 70,
+      "rule": "A rejected claim shows its reason and is edited and resubmitted as the same claim",
+      "scenario": "Reading the rejection reason",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Ravi has rejected Asha's claim with the reason \"The taxi needs a receipt\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Asha opens that claim",
+          "keyword": "When"
+        },
+        {
+          "text": "she sees the reason \"The taxi needs a receipt\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F1 Submit expense claims",
+      "featureFile": "specs/validation/acceptance/F1-submit-expense-claims.feature",
+      "line": 75,
+      "rule": "A rejected claim shows its reason and is edited and resubmitted as the same claim",
+      "scenario": "Resubmitting after a rejection",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Ravi has rejected Asha's claim with the reason \"The taxi needs a receipt\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Asha attaches the receipt \"taxi.pdf\" to the taxi line and resubmits the claim",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim keeps its reference",
+          "keyword": "Then"
+        },
+        {
+          "text": "the claim status is \"Submitted\"",
+          "keyword": "And"
+        },
+        {
+          "text": "Asha still has exactly one claim with that reference",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 6,
+      "rule": "A manager sees the submitted claims of their direct reports, oldest first",
+      "scenario": "The queue is ordered by submission date",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha and Maya are Ravi's direct reports",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Maya submitted claim \"EC-1004\" on \"2026-01-12\" and Asha submitted claim \"EC-1002\" on \"2026-01-13\"",
+          "keyword": "And"
+        },
+        {
+          "text": "Ravi the manager opens team approvals",
+          "keyword": "When"
+        },
+        {
+          "text": "he sees \"EC-1004\" first and \"EC-1002\" second",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 16,
+      "rule": "Only the line manager sees an employee's claims",
+      "scenario": "Another team's claims are not listed",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Asha is Ravi's direct report and Joel is Dilani's direct report",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "both have submitted a claim",
+          "keyword": "And"
+        },
+        {
+          "text": "Ravi opens team approvals",
+          "keyword": "When"
+        },
+        {
+          "text": "he sees only Asha's claim",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 25,
+      "rule": "Finance sets each employee's line manager",
+      "scenario": "A newly assigned manager sees the claim",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Maya has a submitted claim and no line manager",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal from finance sets Ravi as Maya's line manager",
+          "keyword": "When"
+        },
+        {
+          "text": "Ravi sees Maya's claim in team approvals",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 33,
+      "rule": "A manager sees the full claim before deciding",
+      "scenario": "Opening a claim",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has submitted claim \"EC-1002\" with a \"Meals\" line of \"148.20\" and the receipt \"dinner.jpg\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi opens that claim",
+          "keyword": "When"
+        },
+        {
+          "text": "he sees the line, the receipt \"dinner.jpg\" and the total \"$148.20\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 41,
+      "rule": "A manager approves a whole claim",
+      "scenario": "Approving a claim",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has submitted claim \"EC-1002\" for \"148.20\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi approves it",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim status is \"Approved\"",
+          "keyword": "Then"
+        },
+        {
+          "text": "Asha sees the claim as \"Approved\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 51,
+      "rule": "A manager never approves their own claim",
+      "scenario": "A manager's own claim is not in their queue",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Ravi has submitted claim \"EC-1007\" for \"90.00\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi opens team approvals",
+          "keyword": "When"
+        },
+        {
+          "text": "claim \"EC-1007\" is not listed",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 56,
+      "rule": "A manager never approves their own claim",
+      "scenario": "A manager's claim goes to their own line manager",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Ravi has submitted claim \"EC-1007\" and Dilani is Ravi's line manager",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Dilani opens team approvals",
+          "keyword": "When"
+        },
+        {
+          "text": "she sees claim \"EC-1007\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 65,
+      "rule": "A rejection needs a reason, which the employee sees",
+      "scenario": "Rejecting without a reason",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Asha has submitted claim \"EC-1002\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi rejects it with no reason",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim status is still \"Submitted\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 70,
+      "rule": "A rejection needs a reason, which the employee sees",
+      "scenario": "Rejecting with a reason",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Asha has submitted claim \"EC-1002\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi rejects it with the reason \"Please add the hotel receipt\"",
+          "keyword": "When"
+        },
+        {
+          "text": "the claim status is \"Rejected\"",
+          "keyword": "Then"
+        },
+        {
+          "text": "Asha sees the reason \"Please add the hotel receipt\"",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 80,
+      "rule": "The manager's decision is final and applies to the whole claim",
+      "scenario": "An approved claim cannot be decided again",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Ravi has approved claim \"EC-1002\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Ravi's team approvals no longer offer an approve or reject action for it",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F2 Approvals",
+      "featureFile": "specs/validation/acceptance/F2-approvals.feature",
+      "line": 87,
+      "rule": "A manager sees the claims they already decided",
+      "scenario": "The decided list",
+      "tags": [],
+      "steps": [
+        {
+          "text": "Ravi has approved claim \"EC-1005\" and rejected claim \"EC-1003\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "he opens decided claims",
+          "keyword": "When"
+        },
+        {
+          "text": "he sees \"EC-1005\" as \"Approved\" and \"EC-1003\" as \"Rejected\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 6,
+      "rule": "Finance sees the approved claims that have not been exported",
+      "scenario": "The waiting list",
+      "tags": [],
+      "steps": [
+        {
+          "text": "claim \"EC-1005\" for Maya at \"78.00\" is approved",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "claim \"EC-1008\" for Asha at \"120.00\" is approved",
+          "keyword": "And"
+        },
+        {
+          "text": "Nimal from finance opens payroll export",
+          "keyword": "When"
+        },
+        {
+          "text": "he sees both claims with employee, total and approval date",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 13,
+      "rule": "Finance sees the approved claims that have not been exported",
+      "scenario": "Claims that are not approved are not listed",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "claim \"EC-1004\" is submitted and claim \"EC-1003\" is rejected",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal opens payroll export",
+          "keyword": "When"
+        },
+        {
+          "text": "neither claim is listed",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 21,
+      "rule": "One export contains every approved claim not yet exported, as a CSV file",
+      "scenario": "Exporting all waiting claims",
+      "tags": [],
+      "steps": [
+        {
+          "text": "claim \"EC-1005\" for Maya at \"78.00\" and claim \"EC-1008\" for Asha at \"120.00\" are approved",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal exports the approved claims",
+          "keyword": "When"
+        },
+        {
+          "text": "he downloads one CSV file with two rows",
+          "keyword": "Then"
+        },
+        {
+          "text": "each row has the employee, the claim reference, the approval date and the total",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 31,
+      "rule": "Finance cannot export when nothing is waiting",
+      "scenario": "Nothing to export",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "no claim is approved and waiting",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal exports the approved claims",
+          "keyword": "When"
+        },
+        {
+          "text": "no new export is added to the history",
+          "keyword": "Then"
+        },
+        {
+          "text": "he is told there is nothing to export",
+          "keyword": "And"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 40,
+      "rule": "An exported claim is marked exported and never exported again",
+      "scenario": "Claims are marked after export",
+      "tags": [],
+      "steps": [
+        {
+          "text": "claim \"EC-1005\" is approved",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal exports the approved claims",
+          "keyword": "When"
+        },
+        {
+          "text": "Maya sees claim \"EC-1005\" as \"Exported\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 46,
+      "rule": "An exported claim is marked exported and never exported again",
+      "scenario": "A second export does not repeat claims",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "claim \"EC-1005\" was included in an earlier export",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "claim \"EC-1008\" is newly approved",
+          "keyword": "And"
+        },
+        {
+          "text": "Nimal exports the approved claims",
+          "keyword": "When"
+        },
+        {
+          "text": "the new file contains only \"EC-1008\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 55,
+      "rule": "Finance can download earlier export files again",
+      "scenario": "Downloading an earlier file",
+      "tags": [],
+      "steps": [
+        {
+          "text": "an export created on \"2026-01-08\" contained claim \"EC-1006\"",
+          "keyword": "Given",
+          "observed": "could not be carried out: the deployed API is unreachable from the web app: every /api/* call (e.g. GET /api/categories, GET /api/me/claims) returns 404 {\"error\":\"Not Found\"} from envoy, so the category list is empty and no claim can be created or read; direct API-host paths return the same 404"
+        },
+        {
+          "text": "Nimal opens the export history and downloads that file",
+          "keyword": "When"
+        },
+        {
+          "text": "the file contains claim \"EC-1006\"",
+          "keyword": "Then"
+        }
+      ],
+      "outcome": "blocked"
+    },
+    {
+      "feature": "F3 Payroll export",
+      "featureFile": "specs/validation/acceptance/F3-payroll-export.feature",
+      "line": 64,
+      "rule": "Only finance may see or create exports",
+      "scenario": "A manager cannot reach payroll export",
+      "tags": [
+        "@negative"
+      ],
+      "steps": [
+        {
+          "text": "Ravi is signed in as a manager",
+          "keyword": "Given",
+          "command": "agent-browser fill/click sign-in as test-manager",
+          "observed": "landed on /my-claims signed in as test-manager (nav shows My claims, Team approvals, Decided claims)"
+        },
+        {
+          "text": "payroll export is not offered to him",
+          "keyword": "Then",
+          "command": "agent-browser get count 'a[href*=\"export\"]'",
+          "exit": 0,
+          "observed": "0; also `agent-browser wait --text \"Payroll\" --timeout 2000` exited 1 (text absent)"
+        }
+      ],
+      "outcome": "passed"
+    }
+  ]
+}
