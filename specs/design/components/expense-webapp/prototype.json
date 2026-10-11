@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 3,
+  "name": "Expense Claims",
+  "entryScreen": "screen.my-claims",
+  "roles": [
+    { "id": "Employee", "name": "Employee" },
+    { "id": "Manager", "name": "Manager" },
+    { "id": "PayrollOfficer", "name": "Finance (payroll officer)" }
+  ],
+  "states": [
+    { "id": "state.default", "name": "Default" },
+    { "id": "state.empty", "name": "Nothing to show" },
+    { "id": "state.validation-error", "name": "Validation errors" }
+  ],
+  "screens": [
+    { "id": "screen.my-claims", "name": "My claims", "roleIds": ["Employee", "Manager"] },
+    { "id": "screen.claim-detail", "name": "Claim", "roleIds": ["Employee", "Manager"] },
+    { "id": "screen.claim-edit", "name": "Edit claim", "roleIds": ["Employee", "Manager"] },
+    { "id": "screen.team-queue", "name": "Team approvals", "roleIds": ["Manager"] },
+    { "id": "screen.team-claim", "name": "Team claim", "roleIds": ["Manager"] },
+    { "id": "screen.team-decided", "name": "Decided claims", "roleIds": ["Manager"] },
+    { "id": "screen.export", "name": "Payroll export", "roleIds": ["PayrollOfficer"] },
+    { "id": "screen.people", "name": "People", "roleIds": ["PayrollOfficer"] },
+    { "id": "screen.account", "name": "Account", "roleIds": ["Employee", "Manager", "PayrollOfficer"] },
+    { "id": "screen.signed-out", "name": "Signed out", "roleIds": ["Employee", "Manager", "PayrollOfficer"] }
+  ],
+  "flows": [
+    { "id": "flow.submit-claim", "name": "Create and submit a claim", "roleId": "Employee",
+      "screenIds": ["screen.my-claims", "screen.claim-edit", "screen.claim-detail"] },
+    { "id": "flow.fix-rejected", "name": "Fix and resubmit a rejected claim", "roleId": "Employee",
+      "screenIds": ["screen.my-claims", "screen.claim-detail", "screen.claim-edit"] },
+    { "id": "flow.decide", "name": "Approve or reject a team claim", "roleId": "Manager",
+      "screenIds": ["screen.team-queue", "screen.team-claim", "screen.team-decided"] },
+    { "id": "flow.export", "name": "Export approved claims to payroll", "roleId": "PayrollOfficer",
+      "screenIds": ["screen.export"] },
+    { "id": "flow.set-manager", "name": "Set an employee's line manager", "roleId": "PayrollOfficer",
+      "screenIds": ["screen.people"] }
+  ]
+}
