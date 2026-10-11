@@ -139,3 +139,16 @@ export async function submitClaim(claimId: string): Promise<Claim> {
   if (!data) throw new Error(apiMessage(error, "The claim could not be submitted."));
   return data;
 }
+
+export async function loadTeamClaim(claimId: string): Promise<Claim> {
+  const { data, error } = await expenseApi.GET("/me/team/claims/{claimId}", { params: { path: { claimId } } });
+  if (!data) throw new Error(apiMessage(error, "The claim could not be loaded."));
+  return data;
+}
+
+/** The team's claims in one status; the unfiltered list would mix every status. */
+export async function listTeamClaims(status: ClaimStatus) {
+  const { data, error } = await expenseApi.GET("/me/team/claims", { params: { query: { status, limit: 100 } } });
+  if (!data) throw new Error(apiMessage(error, "The team's claims could not be loaded."));
+  return data;
+}
