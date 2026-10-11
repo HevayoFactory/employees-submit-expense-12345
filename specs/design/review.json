@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "path": "specs/design/security.json",
+      "checkedHash": "f0f80d756ab1d617e94c391ba311767dd8b9bf310fcbfbc7486f350ccac37ac1"
+    },
+    {
+      "path": "specs/design/components/expense-webapp/prototype.json",
+      "checkedHash": "1e9824f450a4d434d92d5f0019051496e9e0d448a7148115eaa99c93f41a59f7"
+    },
+    {
+      "path": "specs/design/design.cell",
+      "checkedHash": "aea64de540ed0b746b2a6760a020fc6845b88b23ea435b40e4de2e2ba800565b"
+    },
+    {
+      "path": "specs/design/domain-model.md",
+      "checkedHash": "5ea9db6da3925b6197fd4ae73ba7298194400e74b70e868e9f723bb2d78aed94"
+    },
+    {
+      "path": "specs/design/components/expense-api/openapi.yaml",
+      "checkedHash": "a90f4ef37f30667e14829b788d96a6be1e3b90123bb29b6418f58f5473077494"
+    },
+    {
+      "path": "specs/design/decisions.md",
+      "checkedHash": "310d0eca99164b393d74161bd7adfa3887839f23f9667652e600d78bd816c969"
+    }
+  ]
+}
