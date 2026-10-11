@@ -22,6 +22,8 @@ Needs: F1.
 - A manager approves or rejects a whole claim, not individual lines.
 - No notifications: managers and employees check the app for pending and decided claims.
 - A manager cannot approve their own claim.
+- Finance sets each employee's line manager on a People screen; an employee with no manager has no one to decide their claims. *assumed*
+- A manager's own claims are decided by the manager's own line manager. *assumed*
 
 ## Out of Scope
 

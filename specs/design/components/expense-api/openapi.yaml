@@ -1,0 +1,568 @@
+openapi: 3.0.3
+info:
+  title: Expense Claims API
+  version: 0.1.0
+  description: Claims, approvals, people and payroll exports.
+servers:
+  - url: /
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth2/authorize
+          tokenUrl: /oauth2/token
+          scopes:
+            claims:read: See the caller's own claims
+            claims:submit: Create, edit and submit the caller's own claims
+            claims:read-team: See the claims of the caller's direct reports
+            claims:approve: Approve a direct report's submitted claim
+            claims:reject: Reject a direct report's submitted claim
+            employees:read-all: See every employee and line manager
+            employees:manage: Set an employee's line manager
+            exports:read: See pending claims and past exports
+            exports:create: Create a payroll export
+  parameters:
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      description: Page size
+    offset:
+      name: offset
+      in: query
+      schema: { type: integer, default: 0, minimum: 0 }
+      description: Items to skip
+    claimId:
+      name: claimId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Claim id
+    lineId:
+      name: lineId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Expense line id
+  responses:
+    BadRequest:
+      description: The request is invalid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Not signed in or not permitted
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: No such record for this caller
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: The record is not in a state that allows this
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: integer, description: HTTP or application error code }
+        message: { type: string, description: short human-readable label }
+        description: { type: string, description: detailed explanation }
+        moreInfo: { type: string, description: URI to documentation }
+    ClaimStatus:
+      type: string
+      enum: [draft, submitted, approved, rejected, exported]
+    Employee:
+      type: object
+      required: [id, name, email]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        managerId: { type: string, nullable: true, description: the line manager's employee id, null until Finance sets it }
+        managerName: { type: string, nullable: true }
+    Category:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+    ExpenseLineInput:
+      type: object
+      required: [date, amountCents, categoryId]
+      properties:
+        date: { type: string, format: date }
+        amountCents: { type: integer, minimum: 1, description: amount in cents of the company currency }
+        categoryId: { type: string }
+        note: { type: string }
+    ExpenseLine:
+      allOf:
+        - $ref: '#/components/schemas/ExpenseLineInput'
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+            categoryName: { type: string }
+            receiptFileName: { type: string, nullable: true, description: null when no receipt is attached }
+    Claim:
+      type: object
+      required: [id, reference, employeeId, employeeName, status, totalCents, lines]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        employeeId: { type: string }
+        employeeName: { type: string }
+        status: { $ref: '#/components/schemas/ClaimStatus' }
+        totalCents: { type: integer, description: sum of the lines in cents }
+        submittedAt: { type: string, format: date-time, nullable: true }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        rejectionReason: { type: string, nullable: true }
+        exportBatchId: { type: string, nullable: true }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/ExpenseLine' }
+    ClaimSummary:
+      type: object
+      required: [id, reference, employeeName, status, totalCents]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        employeeName: { type: string }
+        status: { $ref: '#/components/schemas/ClaimStatus' }
+        totalCents: { type: integer }
+        submittedAt: { type: string, format: date-time, nullable: true }
+        decidedAt: { type: string, format: date-time, nullable: true }
+    ClaimInput:
+      type: object
+      required: [lines]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ExpenseLineInput' }
+    Rejection:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1 }
+    Receipt:
+      type: object
+      required: [fileName, contentType, contentBase64]
+      properties:
+        fileName: { type: string }
+        contentType: { type: string }
+        contentBase64: { type: string, description: file content, at most 5 MB decoded }
+    ManagerAssignment:
+      type: object
+      required: [managerId]
+      properties:
+        managerId: { type: string }
+    PendingClaim:
+      type: object
+      required: [id, reference, employeeName, totalCents, approvedAt]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        employeeName: { type: string }
+        totalCents: { type: integer }
+        approvedAt: { type: string, format: date-time }
+    ExportBatch:
+      type: object
+      required: [id, createdAt, claimCount, totalCents, fileName]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        claimCount: { type: integer }
+        totalCents: { type: integer }
+        fileName: { type: string }
+    ClaimSummaryPage:
+      type: object
+      required: [count, data]
+      properties:
+        count: { type: integer }
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        data: { type: array, items: { $ref: '#/components/schemas/ClaimSummary' } }
+    EmployeePage:
+      type: object
+      required: [count, data]
+      properties:
+        count: { type: integer }
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        data: { type: array, items: { $ref: '#/components/schemas/Employee' } }
+    PendingClaimPage:
+      type: object
+      required: [count, data]
+      properties:
+        count: { type: integer }
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        data: { type: array, items: { $ref: '#/components/schemas/PendingClaim' } }
+    ExportBatchPage:
+      type: object
+      required: [count, data]
+      properties:
+        count: { type: integer }
+        next: { type: string, nullable: true }
+        previous: { type: string, nullable: true }
+        data: { type: array, items: { $ref: '#/components/schemas/ExportBatch' } }
+security:
+  - oauth2: []
+paths:
+  /me:
+    get:
+      operationId: getCurrentEmployee
+      summary: The signed-in employee
+      responses:
+        '200':
+          description: The caller
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /categories:
+    get:
+      operationId: listCategories
+      summary: The fixed list of expense categories
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /me/claims:
+    get:
+      operationId: listMyClaims
+      summary: The caller's claims
+      security:
+        - oauth2: [claims:read]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ClaimStatus' }
+          description: Only claims in this status
+      responses:
+        '200':
+          description: A page of the caller's claims
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClaimSummaryPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createMyClaim
+      summary: Create a draft claim for the caller
+      security:
+        - oauth2: [claims:submit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClaimInput' }
+      responses:
+        '201':
+          description: The draft claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /me/claims/{claimId}:
+    parameters:
+      - $ref: '#/components/parameters/claimId'
+    get:
+      operationId: getMyClaim
+      summary: One of the caller's claims
+      security:
+        - oauth2: [claims:read]
+      responses:
+        '200':
+          description: The claim with its lines and any rejection reason
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateMyClaim
+      summary: Replace the lines of the caller's draft or rejected claim
+      security:
+        - oauth2: [claims:submit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClaimInput' }
+      responses:
+        '200':
+          description: The updated claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/claims/{claimId}/submit:
+    post:
+      operationId: submitMyClaim
+      summary: Submit the caller's draft or rejected claim for approval
+      security:
+        - oauth2: [claims:submit]
+      parameters:
+        - $ref: '#/components/parameters/claimId'
+      responses:
+        '200':
+          description: The submitted claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/claims/{claimId}/expense-lines/{lineId}/receipt:
+    parameters:
+      - $ref: '#/components/parameters/claimId'
+      - $ref: '#/components/parameters/lineId'
+    get:
+      operationId: getMyReceipt
+      summary: The receipt of a line of the caller's claim
+      security:
+        - oauth2: [claims:read]
+      responses:
+        '200':
+          description: The receipt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receipt' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: attachMyReceipt
+      summary: Attach a receipt to a line of the caller's draft or rejected claim
+      security:
+        - oauth2: [claims:submit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Receipt' }
+      responses:
+        '204':
+          description: Receipt stored
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/team/claims:
+    get:
+      operationId: listTeamClaims
+      summary: Claims of the caller's direct reports, oldest submission first
+      security:
+        - oauth2: [claims:read-team]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ClaimStatus' }
+          description: Only claims in this status; drafts are never listed
+      responses:
+        '200':
+          description: A page of the team's claims
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClaimSummaryPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /me/team/claims/{claimId}:
+    get:
+      operationId: getTeamClaim
+      summary: A direct report's claim with its lines
+      security:
+        - oauth2: [claims:read-team]
+      parameters:
+        - $ref: '#/components/parameters/claimId'
+      responses:
+        '200':
+          description: The claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /me/team/claims/{claimId}/approve:
+    post:
+      operationId: approveTeamClaim
+      summary: Approve a direct report's submitted claim
+      security:
+        - oauth2: [claims:approve]
+      parameters:
+        - $ref: '#/components/parameters/claimId'
+      responses:
+        '200':
+          description: The approved claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/team/claims/{claimId}/reject:
+    post:
+      operationId: rejectTeamClaim
+      summary: Reject a direct report's submitted claim with a reason
+      security:
+        - oauth2: [claims:reject]
+      parameters:
+        - $ref: '#/components/parameters/claimId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Rejection' }
+      responses:
+        '200':
+          description: The rejected claim
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Claim' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /me/team/claims/{claimId}/expense-lines/{lineId}/receipt:
+    get:
+      operationId: getTeamReceipt
+      summary: The receipt of a line of a direct report's claim
+      security:
+        - oauth2: [claims:read-team]
+      parameters:
+        - $ref: '#/components/parameters/claimId'
+        - $ref: '#/components/parameters/lineId'
+      responses:
+        '200':
+          description: The receipt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receipt' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /employees:
+    get:
+      operationId: listEmployees
+      summary: Every employee with their line manager
+      security:
+        - oauth2: [employees:read-all]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: A page of employees
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EmployeePage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /employees/{employeeId}/manager:
+    put:
+      operationId: setEmployeeManager
+      summary: Set any employee's line manager
+      security:
+        - oauth2: [employees:manage]
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Employee id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ManagerAssignment' }
+      responses:
+        '200':
+          description: The updated employee
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Employee' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /export-candidates:
+    get:
+      operationId: listExportCandidates
+      summary: Every approved claim not yet exported
+      security:
+        - oauth2: [exports:read]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: A page of approved claims waiting for export
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PendingClaimPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /exports:
+    get:
+      operationId: listExports
+      summary: Every past export, newest first
+      security:
+        - oauth2: [exports:read]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: A page of export batches
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportBatchPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createExport
+      summary: Export every approved, not yet exported claim as one CSV batch
+      security:
+        - oauth2: [exports:create]
+      responses:
+        '201':
+          description: The new batch; its claims are now exported
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportBatch' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /exports/{exportId}/file:
+    get:
+      operationId: downloadExportFile
+      summary: Download an export's CSV file
+      security:
+        - oauth2: [exports:read]
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Export batch id
+      responses:
+        '200':
+          description: CSV with one row per claim, columns employee, claim reference, approval date, total
+          content:
+            text/csv:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
