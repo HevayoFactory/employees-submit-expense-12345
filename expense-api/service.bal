@@ -43,39 +43,130 @@ service http:InterceptableService / on ep0 {
 
     // ---- claims (issue #6) ----
 
-    resource function get me/claims(ClaimStatus? status, int 'limit = 20, int offset = 0)
-            returns ClaimSummaryPage|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function get me/claims(http:RequestContext ctx, ClaimStatus? status, int 'limit = 20, int offset = 0)
+            returns ClaimSummaryPage|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        PageParams|ErrorBadRequest page = pageParams('limit, offset);
+        if page is ErrorBadRequest {
+            return page;
+        }
+        ClaimSummaryPage|error result = listClaims(caller.userId, status, page, "/me/claims");
+        if result is error {
+            log:printError("listing claims failed", 'error = result);
+            return internalError();
+        }
+        return result;
     }
 
-    resource function post me/claims(@http:Payload ClaimInput payload)
-            returns Claim|ErrorBadRequest|ErrorUnauthorized|http:NotImplemented {
-        return notImplemented();
+    resource function post me/claims(http:RequestContext ctx, @http:Payload ClaimInput payload)
+            returns http:Created|ErrorBadRequest|ErrorUnauthorized|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = createMyClaimFor(caller, payload);
+        if result is ClaimFailure {
+            return badRequestError(result.message());
+        }
+        if result is error {
+            log:printError("creating a claim failed", 'error = result);
+            return internalError();
+        }
+        return <http:Created>{body: result};
     }
 
-    resource function get me/claims/[string claimId]()
-            returns Claim|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function get me/claims/[string claimId](http:RequestContext ctx)
+            returns Claim|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = readMyClaim(caller, claimId);
+        if result is ClaimFailure {
+            return notFoundError();
+        }
+        if result is error {
+            log:printError("reading a claim failed", 'error = result);
+            return internalError();
+        }
+
+        return result;
     }
 
-    resource function put me/claims/[string claimId](@http:Payload ClaimInput payload)
-            returns Claim|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function put me/claims/[string claimId](http:RequestContext ctx, @http:Payload ClaimInput payload)
+            returns Claim|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = updateMyClaimFor(caller, claimId, payload);
+        if result is ClaimFailure {
+            return failureResponse(result);
+        }
+        if result is error {
+            log:printError("updating a claim failed", 'error = result);
+            return internalError();
+        }
+
+        return result;
     }
 
-    resource function post me/claims/[string claimId]/submit()
-            returns ClaimOk|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function post me/claims/[string claimId]/submit(http:RequestContext ctx)
+            returns Claim|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Claim|ClaimFailure|error result = submitMyClaimFor(caller, claimId);
+        if result is ClaimFailure {
+            return failureResponse(result);
+        }
+        if result is error {
+            log:printError("submitting a claim failed", 'error = result);
+            return internalError();
+        }
+
+        return result;
     }
 
-    resource function get me/claims/[string claimId]/expense\-lines/[string lineId]/receipt()
-            returns Receipt|ErrorUnauthorized|ErrorNotFound|http:NotImplemented {
-        return notImplemented();
+    resource function get me/claims/[string claimId]/expense\-lines/[string lineId]/receipt(http:RequestContext ctx)
+            returns Receipt|ErrorUnauthorized|ErrorNotFound|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        Receipt|ClaimFailure|error result = getMyReceiptFor(caller, claimId, lineId);
+        if result is ClaimFailure {
+            return notFoundError();
+        }
+        if result is error {
+            log:printError("reading a receipt failed", 'error = result);
+            return internalError();
+        }
+
+        return result;
     }
 
-    resource function put me/claims/[string claimId]/expense\-lines/[string lineId]/receipt(@http:Payload Receipt payload)
-            returns http:NoContent|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:NotImplemented {
-        return notImplemented();
+    resource function put me/claims/[string claimId]/expense\-lines/[string lineId]/receipt(
+            http:RequestContext ctx, @http:Payload Receipt payload)
+            returns http:NoContent|ErrorBadRequest|ErrorUnauthorized|ErrorNotFound|ErrorConflict|http:InternalServerError {
+        GatewayCaller|http:Unauthorized caller = requireGatewayCaller(ctx);
+        if caller is http:Unauthorized {
+            return unauthorizedError();
+        }
+        ()|ClaimFailure|error result = attachMyReceiptFor(caller, claimId, lineId, payload);
+        if result is ClaimFailure {
+            return failureResponse(result);
+        }
+        if result is error {
+            log:printError("attaching a receipt failed", 'error = result);
+            return internalError();
+        }
+
+        return http:NO_CONTENT;
     }
 
     // ---- approvals (issue #8) ----
